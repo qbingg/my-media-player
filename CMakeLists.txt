@@ -39,17 +39,25 @@ install(SCRIPT ${deploy_script})
 
 # 1. 指定 FFmpeg 根目录
 set(FFMPEG_DIR "D:/Codes/cppCode/FFmpegCode/ffmpeg-master-latest-win64-gpl-shared")
+set(SDL_DIR "D:/Codes/cppCode/FFmpegCode/014/ffmpeg-simple-player/thirdparty/SDL2-2.0.22")
 # 2. 添加 FFmpeg 头文件路径
 # include_directories(${FFMPEG_DIR}/include)
 target_include_directories(myAudioPlayer_test1
     PRIVATE
         ${FFMPEG_DIR}/include
+        ${SDL_DIR}/include
 )
 # 3. 添加 FFmpeg 库文件路径
 # link_directories(${FFMPEG_DIR}/lib)
 target_link_directories(myAudioPlayer_test1
     PRIVATE
         ${FFMPEG_DIR}/lib
+        ${SDL_DIR}/lib/x64
+)
+# 4. 添加编译定义，避免 SDL 重定义 main
+target_compile_definitions(myAudioPlayer_test1
+    PRIVATE
+        SDL_MAIN_HANDLED
 )
 # 5. 链接 FFmpeg 库（按需添加）
 target_link_libraries(myAudioPlayer_test1
@@ -61,6 +69,7 @@ target_link_libraries(myAudioPlayer_test1
         swscale
         swresample
         ws2_32  # Windows 系统库
+        SDL2                      # 只链接 SDL2，不链接 SDL2main
 )
 # # 6. 自动复制 DLL 到输出目录（可选）
 # # 添加到“高级系统设置”可注释掉：D:\Codes\cppCode\FFmpegCode\ffmpeg-master-latest-win64-gpl-shared\bin

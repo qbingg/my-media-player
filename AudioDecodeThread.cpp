@@ -146,7 +146,16 @@ int AudioDecodeThread::audio_decode_frame(FFmpegPlayerCtx *is, double *pts_ptr)
     }
 }
 
-
+// ====================== 核心：SDL音频回调（不变） ======================
+static void FN_Audio_Cb(
+    void *userdata,
+    Uint8 *stream,
+    int len
+    )
+{
+    AudioDecodeThread *dt = (AudioDecodeThread*)userdata;
+    dt->getAudioData(stream, len);
+}
 void AudioDecodeThread::run()
 {
     // do nothing
@@ -156,4 +165,49 @@ void AudioDecodeThread::run()
     //
     //     Sleep(1);
     // }
+    qDebug() << "音频解码线程启动";
+
+    // 1. 检查上下文是否初始化
+    if (!is || !is->aCodecCtx) {
+        qDebug() << "音频上下文未初始化，线程退出";
+        return;
+    }
+
+    // 2. 初始化SDL音频子系统
+    if (SDL_Init(SDL_INIT_AUDIO) != 0) {
+        qDebug() << "SDL音频初始化失败：" << SDL_GetError();
+        return;
+    }
+
+    // 3. 配置SDL音频参数（必须和FFmpeg重采样格式完全一致！）
+    SDL_AudioSpec spec = {0};
+    spec.freq = is->aCodecCtx->sample_rate;        // 采样率（44100/48000）
+    spec.format = AUDIO_S16LSB;                    // 采样格式：16位有符号小端（和你的swr输出一致）
+    spec.channels = is->aCodecCtx->ch_layout.nb_channels; // 声道数
+    spec.samples = 4096;                           // SDL缓冲区大小（推荐4096/8192）
+    spec.callback = FN_Audio_Cb;                   // 绑定SDL回调
+    spec.userdata = this;                          // 传递当前线程对象
+
+    // 4. 打开SDL音频设备
+    SDL_AudioSpec obtained;
+    m_audio_dev = SDL_OpenAudioDevice(nullptr, 0, &spec, &obtained, 0);
+    if (m_audio_dev == 0) {
+        qDebug() << "打开SDL音频设备失败：" << SDL_GetError();
+        SDL_QuitSubSystem(SDL_INIT_AUDIO);
+        return;
+    }
+
+    // 5. 启动音频播放（解除暂停）
+    SDL_PauseAudioDevice(m_audio_dev, 0);
+    qDebug() << "SDL音频设备启动成功，开始播放";
+
+    // 6. 线程主循环：保持线程存活，等待停止信号
+    while (!m_stop && !isInterruptionRequested()) {
+        QThread::msleep(10); // 轻量休眠，不占用CPU
+    }
+
+    // 7. 线程退出：清理资源
+    // stopAudio();
+    SDL_QuitSubSystem(SDL_INIT_AUDIO);
+    qDebug() << "音频线程安全退出";
 }

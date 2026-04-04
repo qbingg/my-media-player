@@ -83,7 +83,7 @@ void MainWindow::on_btnPlay_clicked()
     m_audioDecodeThread = new AudioDecodeThread;
     m_audioDecodeThread->setPlayerCtx(&playerCtx);
     QMessageBox::information(this, "", "初始化解码线程");
-
+    m_audioDecodeThread->start();
 
 }
 
