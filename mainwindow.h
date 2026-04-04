@@ -32,12 +32,14 @@ extern "C"{
 
 #include <QMainWindow>
 #include "MyDemuxThread.h"
+#include "PacketQueue.h"
 QT_BEGIN_NAMESPACE
 namespace Ui {
 class MainWindow;
 }
 QT_END_NAMESPACE
 
+#define MAX_AUDIOQ_SIZE (5 * 16 * 1024)
 struct FFmpegPlayerCtx {
     char            filename[1024];
     /*解封装*/
@@ -50,6 +52,9 @@ struct FFmpegPlayerCtx {
     // ? 这是音频的什么？
     SwsContext      *sws_ctx = nullptr;
     SwrContext      *swr_ctx = nullptr;
+
+    PacketQueue     audioq;
+
 };
 
 class MainWindow : public QMainWindow

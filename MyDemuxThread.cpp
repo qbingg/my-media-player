@@ -118,6 +118,51 @@ int MyDemuxThread::stream_open(FFmpegPlayerCtx *is, int media_type)
     return 0;
 }
 
+void MyDemuxThread::run()
+{
+    AVPacket *packet = av_packet_alloc();
+
+    while (true) {
+        //m_stop
+        if(isInterruptionRequested()){
+            qDebug()<<"request quit while decode_loop";
+            break;
+        }
+
+        // begin seek
+        if(0){
+
+        }
+
+        // 检查队列pkt的数量
+        qDebug()<<"检查队列pkt的数量："<<is->audioq.packetSize();
+        if (is->audioq.packetSize() > MAX_AUDIOQ_SIZE) {
+            msleep(10);// SDL_Delay(10);
+            continue;
+        }
+
+        // 从ctx中获取pkt
+        if (av_read_frame(is->formatCtx, packet) < 0) {
+            qDebug()<< "av_read_frame error";
+            break;
+        }
+
+        if (packet->stream_index == is->audio_stream_idx) {
+            is->audioq.packetPut(packet);
+        } else {
+            av_packet_unref(packet);
+        }
+    }
+
+    // while (!m_stop)
+    while(!isInterruptionRequested())
+    {
+        Sleep(100);
+    }
+
+    av_packet_free(&packet);
+}
+
 
 // int MyDemuxThread::open_codec_context(int *stream_idx, AVCodecContext **dec_ctx, AVFormatContext *fmt_ctx, AVMediaType type)
 // {

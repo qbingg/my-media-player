@@ -77,5 +77,6 @@ void MainWindow::on_btnPlay_clicked()
         return;
     }
     QMessageBox::information(this, "", "on_btnPlay_clicked()");
+    m_demuxThread->start();
 }
 

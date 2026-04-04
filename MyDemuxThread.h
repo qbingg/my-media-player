@@ -34,7 +34,7 @@ private:
     // int open_codec_context(int* stream_idx,AVCodecContext** dec_ctx, AVFormatContext* fmt_ctx, enum AVMediaType type);
 
 protected:
-    // void run()override;
+    void run()override;
 };
 
 
