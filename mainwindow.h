@@ -33,6 +33,7 @@ extern "C"{
 #include <QMainWindow>
 #include "MyDemuxThread.h"
 #include "PacketQueue.h"
+#include "AudioDecodeThread.h"
 QT_BEGIN_NAMESPACE
 namespace Ui {
 class MainWindow;
@@ -40,6 +41,11 @@ class MainWindow;
 QT_END_NAMESPACE
 
 #define MAX_AUDIOQ_SIZE (5 * 16 * 1024)
+#define MAX_AUDIO_FRAME_SIZE 192000
+enum PauseState {
+    UNPAUSE = 0,
+    PAUSE = 1
+};
 struct FFmpegPlayerCtx {
     char            filename[1024];
     /*解封装*/
@@ -55,6 +61,21 @@ struct FFmpegPlayerCtx {
 
     PacketQueue     audioq;
 
+    /*解码*/
+    std::atomic<int> pause = UNPAUSE;
+    uint8_t         audio_buf[(MAX_AUDIO_FRAME_SIZE * 3) / 2];
+    unsigned int    audio_buf_size = 0;
+    unsigned int    audio_buf_index = 0;
+
+    uint8_t         *audio_pkt_data = nullptr;
+    int             audio_pkt_size = 0;
+
+    // for sync
+    double          audio_clock = 0.0;
+    double          frame_timer = 0.0;
+    double          frame_last_pts = 0.0;
+    double          frame_last_delay = 0.0;
+    double          video_clock = 0.0;
 };
 
 class MainWindow : public QMainWindow
@@ -80,7 +101,7 @@ private:
     QFileInfo m_fileInfo;//目前只用于给playerCtx赋值
 
     MyDemuxThread *m_demuxThread = nullptr;
-
+    AudioDecodeThread *m_audioDecodeThread = nullptr;
 
 };
 #endif // MAINWINDOW_H

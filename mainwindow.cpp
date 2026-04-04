@@ -76,7 +76,14 @@ void MainWindow::on_btnPlay_clicked()
         // return -1;
         return;
     }
-    QMessageBox::information(this, "", "on_btnPlay_clicked()");
+    QMessageBox::information(this, "", "初始化解封装线程");
     m_demuxThread->start();
+
+    // create audio decode thread
+    m_audioDecodeThread = new AudioDecodeThread;
+    m_audioDecodeThread->setPlayerCtx(&playerCtx);
+    QMessageBox::information(this, "", "初始化解码线程");
+
+
 }
 
