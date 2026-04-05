@@ -15,6 +15,7 @@ qt_add_executable(myAudioPlayer_test1
     PacketQueue.h PacketQueue.cpp
     AudioDecodeThread.h AudioDecodeThread.cpp
     VideoDecodeThread.h VideoDecodeThread.cpp
+    MyDisplayImgWidget.h
 )
 
 target_link_libraries(myAudioPlayer_test1

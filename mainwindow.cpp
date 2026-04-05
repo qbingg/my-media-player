@@ -119,7 +119,15 @@ void MainWindow::on_btnPlay_clicked()
     m_videoDecodeThread = new VideoDecodeThread;
     m_videoDecodeThread->setPlayerCtx(&playerCtx);
     QMessageBox::information(this, "", "初始化解码线程");
+
+    connect(m_videoDecodeThread,&VideoDecodeThread::sendCurrentFrame,[=](QImage qimg){
+        ui->widget->setPixmap(QPixmap::fromImage(qimg));
+    });
+
     m_videoDecodeThread->start();
+
+
+
 
 }
 

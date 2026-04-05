@@ -15,8 +15,7 @@ public:
 
     void setPlayerCtx(FFmpegPlayerCtx *ctx);
 signals:
-    void sendMessage();
-
+    void sendCurrentFrame(QImage);
 private:
     FFmpegPlayerCtx *is = nullptr;
 protected:

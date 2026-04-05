@@ -131,6 +131,22 @@ void VideoDecodeThread::run()
                 //     break;
                 // }
 
+                //投送画面
+                // ====================== 核心：AVFrame转QImage ======================
+                // 1. 用RGB裸数据构造QImage（浅拷贝）
+                QImage qImg(
+                    pFrameRGB->data[0],       // RGB数据首地址
+                    pCodecCtx->width, pCodecCtx->height,            // 宽高
+                    pFrameRGB->linesize[0],    // 行字节数（必须传，避免花屏）
+                    QImage::Format_RGB888      // 对应FFmpeg AV_PIX_FMT_RGB24
+                    );
+
+                // 2. 深拷贝！解决线程中帧数据复用导致的花屏/崩溃（关键）
+                QImage sendImg = qImg.copy();
+
+                // 3. 投递画面到UI线程
+                sendCurrentFrame(sendImg);
+
                 // 计算视频帧间隔
                 AVRational afr;
                 double video_frame_delay;
