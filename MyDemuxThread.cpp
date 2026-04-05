@@ -135,7 +135,7 @@ void MyDemuxThread::run()
         }
 
         // 检查队列pkt的数量
-        qDebug()<<"检查队列pkt的数量："<<is->audioq.packetSize();
+        // qDebug()<<"检查队列pkt的数量："<<is->audioq.packetSize();
         if (is->audioq.packetSize() > MAX_AUDIOQ_SIZE) {
             msleep(10);// SDL_Delay(10);
             continue;

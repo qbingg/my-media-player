@@ -139,9 +139,9 @@ int AudioDecodeThread::audio_decode_frame(FFmpegPlayerCtx *is, double *pts_ptr)
 
         if (pkt->pts != AV_NOPTS_VALUE) {
             is->audio_clock = av_q2d(is->audio_stream->time_base) * pkt->pts;
-            qDebug() << "is->audio_st->time_base 等于：" << av_q2d(is->audio_stream->time_base)
-                      << "\tpkt->pts 等于：" << pkt->pts
-                      << "\tis->audio_clock等于:" << is->audio_clock ;
+            // qDebug() << "is->audio_st->time_base 等于：" << av_q2d(is->audio_stream->time_base)
+            //           << "\tpkt->pts 等于：" << pkt->pts
+            //           << "\tis->audio_clock等于:" << is->audio_clock ;
         }
     }
 }

@@ -1,6 +1,26 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+static double get_audio_clock(FFmpegPlayerCtx *is)
+{
+    double pts;
+    int hw_buf_size, bytes_per_sec, n;
+
+    pts = is->audio_clock;
+    hw_buf_size = is->audio_buf_size - is->audio_buf_index;
+    bytes_per_sec = 0;
+    n = is->aCodecCtx->ch_layout.nb_channels * 2;
+
+    if(is->audio_stream) {
+        bytes_per_sec = is->aCodecCtx->sample_rate * n;
+    }
+
+    if (bytes_per_sec) {
+        pts -= (double)hw_buf_size / bytes_per_sec;
+    }
+    return pts;
+}
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -84,6 +104,17 @@ void MainWindow::on_btnPlay_clicked()
     m_audioDecodeThread->setPlayerCtx(&playerCtx);
     QMessageBox::information(this, "", "初始化解码线程");
     m_audioDecodeThread->start();
+
+    // QTimer *t = new QTimer(this);
+    // connect(t,&QTimer::timeout,this,[=](){
+    //     double audio_clock = get_audio_clock(&playerCtx);
+    //
+    //     QString str = QString::number(audio_clock,'d',8);
+    //
+    //     qDebug()<<audio_clock<<str;
+    // });
+    // t->start(1000);
+
 
 }
 

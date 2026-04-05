@@ -34,6 +34,7 @@ extern "C"{
 #include "MyDemuxThread.h"
 #include "PacketQueue.h"
 #include "AudioDecodeThread.h"
+#include <QTimer>
 QT_BEGIN_NAMESPACE
 namespace Ui {
 class MainWindow;
