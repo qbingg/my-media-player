@@ -1,25 +1,25 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-static double get_audio_clock(FFmpegPlayerCtx *is)
-{
-    double pts;
-    int hw_buf_size, bytes_per_sec, n;
-
-    pts = is->audio_clock;
-    hw_buf_size = is->audio_buf_size - is->audio_buf_index;
-    bytes_per_sec = 0;
-    n = is->aCodecCtx->ch_layout.nb_channels * 2;
-
-    if(is->audio_stream) {
-        bytes_per_sec = is->aCodecCtx->sample_rate * n;
-    }
-
-    if (bytes_per_sec) {
-        pts -= (double)hw_buf_size / bytes_per_sec;
-    }
-    return pts;
-}
+// static double get_audio_clock(FFmpegPlayerCtx *is)
+// {
+//     double pts;
+//     int hw_buf_size, bytes_per_sec, n;
+//
+//     pts = is->audio_clock;
+//     hw_buf_size = is->audio_buf_size - is->audio_buf_index;
+//     bytes_per_sec = 0;
+//     n = is->aCodecCtx->ch_layout.nb_channels * 2;
+//
+//     if(is->audio_stream) {
+//         bytes_per_sec = is->aCodecCtx->sample_rate * n;
+//     }
+//
+//     if (bytes_per_sec) {
+//         pts -= (double)hw_buf_size / bytes_per_sec;
+//     }
+//     return pts;
+// }
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -115,6 +115,11 @@ void MainWindow::on_btnPlay_clicked()
     // });
     // t->start(1000);
 
+    // create video decode thread
+    m_videoDecodeThread = new VideoDecodeThread;
+    m_videoDecodeThread->setPlayerCtx(&playerCtx);
+    QMessageBox::information(this, "", "初始化解码线程");
+    m_videoDecodeThread->start();
 
 }
 

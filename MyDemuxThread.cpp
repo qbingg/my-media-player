@@ -136,7 +136,7 @@ void MyDemuxThread::run()
 
         // 检查队列pkt的数量
         // qDebug()<<"检查队列pkt的数量："<<is->audioq.packetSize();
-        qDebug()<<"检查视频队列pkt的数量："<<is->videoq.packetSize();
+        // qDebug()<<"检查视频队列pkt的数量："<<is->videoq.packetSize();
         if (is->audioq.packetSize() > MAX_AUDIOQ_SIZE || is->videoq.packetSize() > MAX_VIDEOQ_SIZE) {
             msleep(10);// SDL_Delay(10);
             continue;

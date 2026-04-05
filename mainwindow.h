@@ -35,6 +35,7 @@ extern "C"{
 #include "PacketQueue.h"
 #include "AudioDecodeThread.h"
 #include <QTimer>
+#include "VideoDecodeThread.h"
 QT_BEGIN_NAMESPACE
 namespace Ui {
 class MainWindow;
@@ -113,6 +114,6 @@ private:
 
     MyDemuxThread *m_demuxThread = nullptr;
     AudioDecodeThread *m_audioDecodeThread = nullptr;
-
+    VideoDecodeThread *m_videoDecodeThread = nullptr;
 };
 #endif // MAINWINDOW_H

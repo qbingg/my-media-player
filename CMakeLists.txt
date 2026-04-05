@@ -14,6 +14,7 @@ qt_add_executable(myAudioPlayer_test1
     MyDemuxThread.h MyDemuxThread.cpp
     PacketQueue.h PacketQueue.cpp
     AudioDecodeThread.h AudioDecodeThread.cpp
+    VideoDecodeThread.h VideoDecodeThread.cpp
 )
 
 target_link_libraries(myAudioPlayer_test1
