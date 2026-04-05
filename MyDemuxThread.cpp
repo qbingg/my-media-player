@@ -40,11 +40,11 @@ int MyDemuxThread::initDemuxThread()
         return -1;
     }
 
-    // if (stream_open(is, AVMEDIA_TYPE_VIDEO) < 0) {
-    //     // ff_log_line("open video stream Failed.");
-    //     qDebug()<<"open video stream Failed.";
-    //     return -1;
-    // }
+    if (stream_open(is, AVMEDIA_TYPE_VIDEO) < 0) {
+        // ff_log_line("open video stream Failed.");
+        qDebug()<<"open video stream Failed.";
+        return -1;
+    }
 
     return 0;
 }
@@ -92,25 +92,25 @@ int MyDemuxThread::stream_open(FFmpegPlayerCtx *is, int media_type)
         swr_init(is->swr_ctx);
 
         break;
-    // case AVMEDIA_TYPE_VIDEO:
-    //     is->videoStream = stream_index;
-    //     is->vCodecCtx   = codecCtx;
-    //     is->video_st    = formatCtx->streams[stream_index];
-    //     is->frame_timer = (double)av_gettime() / 1000000.0;
-    //     is->frame_last_delay = 40e-3;
-    //     is->sws_ctx = sws_getContext(
-    //         codecCtx->width,
-    //         codecCtx->height,
-    //         codecCtx->pix_fmt,
-    //         codecCtx->width,
-    //         codecCtx->height,
-    //         AV_PIX_FMT_RGB24,
-    //         SWS_BILINEAR,
-    //         NULL,
-    //         NULL,
-    //         NULL
-    //         );
-    //     break;
+    case AVMEDIA_TYPE_VIDEO:
+        is->video_stream_idx = stream_index;
+        is->vCodecCtx   = codecCtx;
+        is->video_stream    = formatCtx->streams[stream_index];
+        is->frame_timer = (double)av_gettime() / 1000000.0;
+        is->frame_last_delay = 40e-3;
+        is->sws_ctx = sws_getContext(
+            codecCtx->width,
+            codecCtx->height,
+            codecCtx->pix_fmt,
+            codecCtx->width,
+            codecCtx->height,
+            AV_PIX_FMT_RGB24,
+            SWS_BILINEAR,
+            NULL,
+            NULL,
+            NULL
+            );
+        break;
     default:
         break;
     }
@@ -136,7 +136,8 @@ void MyDemuxThread::run()
 
         // 检查队列pkt的数量
         // qDebug()<<"检查队列pkt的数量："<<is->audioq.packetSize();
-        if (is->audioq.packetSize() > MAX_AUDIOQ_SIZE) {
+        qDebug()<<"检查视频队列pkt的数量："<<is->videoq.packetSize();
+        if (is->audioq.packetSize() > MAX_AUDIOQ_SIZE || is->videoq.packetSize() > MAX_VIDEOQ_SIZE) {
             msleep(10);// SDL_Delay(10);
             continue;
         }
@@ -147,7 +148,9 @@ void MyDemuxThread::run()
             break;
         }
 
-        if (packet->stream_index == is->audio_stream_idx) {
+        if (packet->stream_index == is->video_stream_idx) {
+            is->videoq.packetPut(packet);
+        } else if (packet->stream_index == is->audio_stream_idx) {
             is->audioq.packetPut(packet);
         } else {
             av_packet_unref(packet);

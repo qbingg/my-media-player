@@ -43,6 +43,7 @@ QT_END_NAMESPACE
 
 #define MAX_AUDIOQ_SIZE (5 * 16 * 1024)
 #define MAX_AUDIO_FRAME_SIZE 192000
+#define MAX_VIDEOQ_SIZE (5 * 256 * 1024)
 enum PauseState {
     UNPAUSE = 0,
     PAUSE = 1
@@ -61,6 +62,15 @@ struct FFmpegPlayerCtx {
     SwrContext      *swr_ctx = nullptr;
 
     PacketQueue     audioq;
+
+    //视频
+    AVCodecContext *vCodecCtx = nullptr;
+    AVStream        *video_stream = nullptr;
+    int             video_stream_idx = -1;
+    AVFrame         *video_frame = nullptr;
+    AVPacket        *video_pkt = nullptr;
+
+    PacketQueue     videoq;
 
     /*解码*/
     std::atomic<int> pause = UNPAUSE;
