@@ -97,6 +97,10 @@ void VideoDecodeThread::run()
         }
 
         //pause
+        if (is->pause == PAUSE) {
+            msleep(5);
+            continue;
+        }
 
         //flush_vctx
 
