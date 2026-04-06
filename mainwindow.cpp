@@ -98,7 +98,7 @@ int MainWindow::initPlayer()
     // create video decode thread
     m_videoDecodeThread = new VideoDecodeThread;
     m_videoDecodeThread->setPlayerCtx(playerCtx);
-    connect(m_videoDecodeThread,&VideoDecodeThread::sendCurrentFrame,[=](QImage qimg){
+    connect(m_videoDecodeThread,&VideoDecodeThread::sendCurrentFrame,this,[=](QImage qimg){
         ui->widget->setPixmap(QPixmap::fromImage(qimg));
     });
 
