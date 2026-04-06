@@ -48,7 +48,8 @@ int MainWindow::initPlayer()
     }
     qDebug()<<"已关闭视频线程";
     if(m_audioDecodeThread){
-        m_audioDecodeThread->requestInterruption();
+        // m_audioDecodeThread->requestInterruption();
+        m_audioDecodeThread->stopThread();
         m_audioDecodeThread->wait();
         delete m_audioDecodeThread;
         m_audioDecodeThread = nullptr;

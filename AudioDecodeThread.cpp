@@ -114,7 +114,6 @@ int AudioDecodeThread::audio_decode_frame(FFmpegPlayerCtx *is, double *pts_ptr)
         }
 
         //这是让m_stop=0；
-        std::atomic<bool> m_stop=0;
         if (m_stop) {
             qDebug() <<"request quit while decode audio";
             return -1;
@@ -144,6 +143,11 @@ int AudioDecodeThread::audio_decode_frame(FFmpegPlayerCtx *is, double *pts_ptr)
             //           << "\tis->audio_clock等于:" << is->audio_clock ;
         }
     }
+}
+
+void AudioDecodeThread::stopThread()
+{
+    m_stop = 1;
 }
 
 // ====================== 核心：SDL音频回调（不变） ======================
@@ -202,7 +206,7 @@ void AudioDecodeThread::run()
     qDebug() << "SDL音频设备启动成功，开始播放";
 
     // 6. 线程主循环：保持线程存活，等待停止信号
-    while (!m_stop && !isInterruptionRequested()) {
+    while (!m_stop) {
         QThread::msleep(10); // 轻量休眠，不占用CPU
     }
 

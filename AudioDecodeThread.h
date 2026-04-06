@@ -17,6 +17,8 @@ public:
     void setPlayerCtx(FFmpegPlayerCtx *ctx);
     void getAudioData(unsigned char *stream, int len);
     int audio_decode_frame(FFmpegPlayerCtx *is, double *pts_ptr);
+
+    void stopThread();
 signals:
     void sendMessage();
 
