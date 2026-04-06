@@ -105,16 +105,6 @@ void MainWindow::on_btnPlay_clicked()
     QMessageBox::information(this, "", "初始化解码线程");
     m_audioDecodeThread->start();
 
-    // QTimer *t = new QTimer(this);
-    // connect(t,&QTimer::timeout,this,[=](){
-    //     double audio_clock = get_audio_clock(&playerCtx);
-    //
-    //     QString str = QString::number(audio_clock,'d',8);
-    //
-    //     qDebug()<<audio_clock<<str;
-    // });
-    // t->start(1000);
-
     // create video decode thread
     m_videoDecodeThread = new VideoDecodeThread;
     m_videoDecodeThread->setPlayerCtx(&playerCtx);
@@ -126,8 +116,23 @@ void MainWindow::on_btnPlay_clicked()
 
     m_videoDecodeThread->start();
 
+    //获取容器总时间，和使用QTimer每秒获取音频时钟
+    int64_t totalMicroSec =playerCtx.formatCtx->duration;
+    ui->totalSecLabel->setText("/ "+QString::number((totalMicroSec / 1000000),'d',8));
+    ui->horizontalSlider->setMaximum((totalMicroSec / 1000000));
+    ui->horizontalSlider->setValue(0);
+    QTimer *t = new QTimer(this);
+    connect(t,&QTimer::timeout,this,[=](){
+        double audio_clock = get_audio_clock(&playerCtx);
 
+        QString str = QString::number(audio_clock,'d',8);
 
+        qDebug()<<audio_clock<<str;
+
+        ui->currentSecLabel->setText(str);
+        ui->horizontalSlider->setValue(audio_clock);
+    });
+    t->start(1000);
 
 }
 

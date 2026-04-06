@@ -2,25 +2,25 @@
 
 #include "mainwindow.h" //FFmpegPlayerCtx结构体前向声明后，还需要在.cpp包含该头文件
 
-static double get_audio_clock(FFmpegPlayerCtx *is)
-{
-    double pts;
-    int hw_buf_size, bytes_per_sec, n;
-
-    pts = is->audio_clock;
-    hw_buf_size = is->audio_buf_size - is->audio_buf_index;
-    bytes_per_sec = 0;
-    n = is->aCodecCtx->ch_layout.nb_channels * 2;
-
-    if(is->audio_stream) {
-        bytes_per_sec = is->aCodecCtx->sample_rate * n;
-    }
-
-    if (bytes_per_sec) {
-        pts -= (double)hw_buf_size / bytes_per_sec;
-    }
-    return pts;
-}
+// static double get_audio_clock(FFmpegPlayerCtx *is)
+// {
+//     double pts;
+//     int hw_buf_size, bytes_per_sec, n;
+//
+//     pts = is->audio_clock;
+//     hw_buf_size = is->audio_buf_size - is->audio_buf_index;
+//     bytes_per_sec = 0;
+//     n = is->aCodecCtx->ch_layout.nb_channels * 2;
+//
+//     if(is->audio_stream) {
+//         bytes_per_sec = is->aCodecCtx->sample_rate * n;
+//     }
+//
+//     if (bytes_per_sec) {
+//         pts -= (double)hw_buf_size / bytes_per_sec;
+//     }
+//     return pts;
+// }
 
 static void mySleep(int ms)
 {
