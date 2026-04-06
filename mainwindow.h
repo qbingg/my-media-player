@@ -128,12 +128,13 @@ private slots:
 private:
     Ui::MainWindow *ui;
 
-    FFmpegPlayerCtx playerCtx;
+    FFmpegPlayerCtx *playerCtx = nullptr;
 
     QFileInfo m_fileInfo;//目前只用于给playerCtx赋值
 
     MyDemuxThread *m_demuxThread = nullptr;
     AudioDecodeThread *m_audioDecodeThread = nullptr;
     VideoDecodeThread *m_videoDecodeThread = nullptr;
+    QTimer *m_checkCurrentSecTimer = nullptr;
 };
 #endif // MAINWINDOW_H

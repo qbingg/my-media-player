@@ -35,6 +35,84 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+int MainWindow::initPlayer()
+{
+    /* 清理旧的线程和上下文 */
+    if(m_audioDecodeThread){
+        m_audioDecodeThread->requestInterruption();
+        m_audioDecodeThread->wait();
+        delete m_audioDecodeThread;
+        m_audioDecodeThread = nullptr;
+    }
+    if(m_videoDecodeThread){
+        m_videoDecodeThread->requestInterruption();
+        m_videoDecodeThread->wait();
+        delete m_videoDecodeThread;
+        m_videoDecodeThread = nullptr;
+    }
+    if(m_demuxThread){
+        m_demuxThread->requestInterruption();
+        m_demuxThread->wait();
+        delete m_demuxThread;
+        m_demuxThread = nullptr;
+    }
+    if(m_checkCurrentSecTimer){
+        m_checkCurrentSecTimer->stop();
+        delete m_checkCurrentSecTimer;
+        m_checkCurrentSecTimer =nullptr;
+    }
+    if(playerCtx){
+        delete playerCtx;
+        playerCtx = nullptr;
+    }
+
+    /* 为新的视频文件初始化播放器 */
+    playerCtx = new FFmpegPlayerCtx;
+    // init ctx
+    playerCtx->audio_frame = av_frame_alloc();
+    playerCtx->audio_pkt = av_packet_alloc();
+
+    // 获取新的视频文件路径 // QString转char filename[1024]
+    QByteArray filePath = m_fileInfo.absoluteFilePath().toUtf8();
+    // 一行搞定：自动截断、自动补\0、永不溢出
+    snprintf(playerCtx->filename, sizeof(playerCtx->filename), "%s", filePath.constData());
+
+    // create demux thread
+    m_demuxThread = new MyDemuxThread;
+    m_demuxThread->setPlayerCtx(playerCtx);
+    if (m_demuxThread->initDemuxThread() != 0) {
+        qDebug()<< "DemuxThread init Failed.";
+        return -1;
+    }
+
+    // create audio decode thread
+    m_audioDecodeThread = new AudioDecodeThread;
+    m_audioDecodeThread->setPlayerCtx(playerCtx);
+
+    // create video decode thread
+    m_videoDecodeThread = new VideoDecodeThread;
+    m_videoDecodeThread->setPlayerCtx(playerCtx);
+    connect(m_videoDecodeThread,&VideoDecodeThread::sendCurrentFrame,[=](QImage qimg){
+        ui->widget->setPixmap(QPixmap::fromImage(qimg));
+    });
+
+    // 获取新容器总时间，和使用QTimer每秒获取音频时钟
+    int64_t totalMicroSec =playerCtx->formatCtx->duration;//AVFormatContext: int64_t duration: 	Duration of the stream, in AV_TIME_BASE fractional seconds.
+    ui->totalSecLabel->setText("/ "+QString::number((totalMicroSec / AV_TIME_BASE),'d',8));
+    ui->horizontalSlider->setMaximum((totalMicroSec / AV_TIME_BASE));
+    ui->horizontalSlider->setValue(0);
+    m_checkCurrentSecTimer = new QTimer(this);
+    connect(m_checkCurrentSecTimer,&QTimer::timeout,this,[=](){
+        double audio_clock = get_audio_clock(playerCtx);
+        QString str = QString::number(audio_clock,'d',8);
+        ui->currentSecLabel->setText(str);
+        ui->horizontalSlider->setValue(audio_clock);
+        qDebug()<<audio_clock<<str;
+    });
+
+    return 0;
+}
+
 void MainWindow::dragEnterEvent(QDragEnterEvent *event)
 {
     if (event->mimeData()->hasUrls())
@@ -73,66 +151,75 @@ void MainWindow::dropEvent(QDropEvent *event)
 
 void MainWindow::on_btnPlay_clicked()
 {
-    // init ctx
-    playerCtx.audio_frame = av_frame_alloc();
-    playerCtx.audio_pkt = av_packet_alloc();
-
-    //QStirng转const char*
-    // 显式创建QByteArray，生命周期=函数体，避免临时对象销毁
-    // QByteArray byteArr = m_fileInfo.absoluteFilePath().toUtf8();//需要保证inputFilename生命周期在muxingAVideo函数体内
-    // std::string stdStr = byteArr.constData(); // 指向栈变量的内存，安全
-    // strncpy(playerCtx.filename, stdStr.c_str(), stdStr.size());
-    QByteArray filePath = m_fileInfo.absoluteFilePath().toUtf8();
-    // 一行搞定：自动截断、自动补\0、永不溢出
-    snprintf(playerCtx.filename, sizeof(playerCtx.filename), "%s", filePath.constData());
-
-
-    // create demux thread
-    m_demuxThread = new MyDemuxThread;
-    m_demuxThread->setPlayerCtx(&playerCtx);
-    if (m_demuxThread->initDemuxThread() != 0) {
-        // ff_log_line("DemuxThread init Failed.");
-        qDebug()<< "DemuxThread init Failed.";
-        // return -1;
+    if(initPlayer() != 0)
         return;
-    }
-    QMessageBox::information(this, "", "初始化解封装线程");
+
     m_demuxThread->start();
-
-    // create audio decode thread
-    m_audioDecodeThread = new AudioDecodeThread;
-    m_audioDecodeThread->setPlayerCtx(&playerCtx);
-    QMessageBox::information(this, "", "初始化解码线程");
     m_audioDecodeThread->start();
-
-    // create video decode thread
-    m_videoDecodeThread = new VideoDecodeThread;
-    m_videoDecodeThread->setPlayerCtx(&playerCtx);
-    QMessageBox::information(this, "", "初始化解码线程");
-
-    connect(m_videoDecodeThread,&VideoDecodeThread::sendCurrentFrame,[=](QImage qimg){
-        ui->widget->setPixmap(QPixmap::fromImage(qimg));
-    });
-
     m_videoDecodeThread->start();
+    m_checkCurrentSecTimer->start(1000);
 
-    //获取容器总时间，和使用QTimer每秒获取音频时钟
-    int64_t totalMicroSec =playerCtx.formatCtx->duration;
-    ui->totalSecLabel->setText("/ "+QString::number((totalMicroSec / 1000000),'d',8));
-    ui->horizontalSlider->setMaximum((totalMicroSec / 1000000));
-    ui->horizontalSlider->setValue(0);
-    QTimer *t = new QTimer(this);
-    connect(t,&QTimer::timeout,this,[=](){
-        double audio_clock = get_audio_clock(&playerCtx);
 
-        QString str = QString::number(audio_clock,'d',8);
+    // // init ctx
+    // playerCtx.audio_frame = av_frame_alloc();
+    // playerCtx.audio_pkt = av_packet_alloc();
 
-        qDebug()<<audio_clock<<str;
+    // //QStirng转const char*
+    // // 显式创建QByteArray，生命周期=函数体，避免临时对象销毁
+    // // QByteArray byteArr = m_fileInfo.absoluteFilePath().toUtf8();//需要保证inputFilename生命周期在muxingAVideo函数体内
+    // // std::string stdStr = byteArr.constData(); // 指向栈变量的内存，安全
+    // // strncpy(playerCtx.filename, stdStr.c_str(), stdStr.size());
+    // QByteArray filePath = m_fileInfo.absoluteFilePath().toUtf8();
+    // // 一行搞定：自动截断、自动补\0、永不溢出
+    // snprintf(playerCtx.filename, sizeof(playerCtx.filename), "%s", filePath.constData());
 
-        ui->currentSecLabel->setText(str);
-        ui->horizontalSlider->setValue(audio_clock);
-    });
-    t->start(1000);
+
+    // // create demux thread
+    // m_demuxThread = new MyDemuxThread;
+    // m_demuxThread->setPlayerCtx(&playerCtx);
+    // if (m_demuxThread->initDemuxThread() != 0) {
+    //     // ff_log_line("DemuxThread init Failed.");
+    //     qDebug()<< "DemuxThread init Failed.";
+    //     // return -1;
+    //     return;
+    // }
+    // QMessageBox::information(this, "", "初始化解封装线程");
+    // m_demuxThread->start();
+
+    // // create audio decode thread
+    // m_audioDecodeThread = new AudioDecodeThread;
+    // m_audioDecodeThread->setPlayerCtx(&playerCtx);
+    // QMessageBox::information(this, "", "初始化解码线程");
+    // m_audioDecodeThread->start();
+
+    // // create video decode thread
+    // m_videoDecodeThread = new VideoDecodeThread;
+    // m_videoDecodeThread->setPlayerCtx(&playerCtx);
+    // QMessageBox::information(this, "", "初始化解码线程");
+
+    // connect(m_videoDecodeThread,&VideoDecodeThread::sendCurrentFrame,[=](QImage qimg){
+    //     ui->widget->setPixmap(QPixmap::fromImage(qimg));
+    // });
+
+    // m_videoDecodeThread->start();
+
+    // //获取容器总时间，和使用QTimer每秒获取音频时钟
+    // int64_t totalMicroSec =playerCtx.formatCtx->duration;
+    // ui->totalSecLabel->setText("/ "+QString::number((totalMicroSec / 1000000),'d',8));
+    // ui->horizontalSlider->setMaximum((totalMicroSec / 1000000));
+    // ui->horizontalSlider->setValue(0);
+    // QTimer *t = new QTimer(this);
+    // connect(t,&QTimer::timeout,this,[=](){
+    //     double audio_clock = get_audio_clock(&playerCtx);
+
+    //     QString str = QString::number(audio_clock,'d',8);
+
+    //     qDebug()<<audio_clock<<str;
+
+    //     ui->currentSecLabel->setText(str);
+    //     ui->horizontalSlider->setValue(audio_clock);
+    // });
+    // t->start(1000);
 
 }
 
