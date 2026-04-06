@@ -28,6 +28,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
 
     setAcceptDrops(true);// 开启对整个窗口的拖放操作的支持
+
+    ui->btnPause->setCheckable(true);
 }
 
 MainWindow::~MainWindow()
@@ -227,5 +229,29 @@ void MainWindow::on_btnPlay_clicked()
     // });
     // t->start(1000);
 
+}
+
+
+void MainWindow::on_btnPause_clicked()
+{
+    if(!playerCtx){
+        qDebug()<<"容器为空。。。";
+
+        ui->btnPause->setChecked(false);
+
+        return;
+    }
+
+    if(ui->btnPause->isChecked()){
+        //暂停播放
+        ui->btnPause->setText("继续");
+
+        playerCtx->pause = PAUSE;
+    }else{
+        //继续播放
+        ui->btnPause->setText("暂停");
+
+        playerCtx->pause = UNPAUSE;
+    }
 }
 
