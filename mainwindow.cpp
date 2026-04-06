@@ -83,6 +83,16 @@ int MainWindow::initPlayer()
         playerCtx = nullptr;
     }
 
+    // 验证输入文件是否为空，是不是文件
+    if(m_fileInfo.absoluteFilePath().isEmpty()){
+        qDebug()<<"输入视频文件为空。。。";
+        return -1;
+    }
+    if(!m_fileInfo.isFile()){
+        qDebug()<<"输入不是文件。。。";
+        return -1;
+    }
+
     /* 为新的视频文件初始化播放器 */
     playerCtx = new FFmpegPlayerCtx;
     // init ctx
