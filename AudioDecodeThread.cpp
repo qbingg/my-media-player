@@ -119,13 +119,13 @@ int AudioDecodeThread::audio_decode_frame(FFmpegPlayerCtx *is, double *pts_ptr)
             return -1;
         }
 
-        //暂时不考虑seek的事情
-        // if (is->flush_actx) {
-        //     is->flush_actx = false;
-        //     qDebug() << "avcodec_flush_buffers(aCodecCtx) for seeking";
-        //     avcodec_flush_buffers(is->aCodecCtx);
-        //     continue;
-        // }
+        //seek
+        if (is->flush_actx) {
+            is->flush_actx = false;
+            qDebug() << "avcodec_flush_buffers(aCodecCtx) for seeking";
+            avcodec_flush_buffers(is->aCodecCtx);
+            continue;
+        }
 
         av_packet_unref(pkt);
 

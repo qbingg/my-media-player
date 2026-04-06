@@ -130,8 +130,36 @@ void MyDemuxThread::run()
         }
 
         // begin seek
-        if(0){
+        if (is->seek_req) {
+            int stream_index= -1;
+            int64_t seek_target = is->seek_pos;
 
+            if (is->video_stream_idx >= 0) {
+                stream_index = is->video_stream_idx;
+            } else if(is->audio_stream_idx >= 0) {
+                stream_index = is->audio_stream_idx;
+            }
+
+            if (stream_index >= 0) {
+                seek_target= av_rescale_q(seek_target, AVRational{1, AV_TIME_BASE}, is->formatCtx->streams[stream_index]->time_base);
+            }
+
+            if (av_seek_frame(is->formatCtx, stream_index, seek_target, is->seek_flags) < 0) {
+                // ff_log_line("%s: error while seeking\n", is->filename);
+                qDebug()<<is->filename<<": error while seeking";
+            } else {
+                if(is->audio_stream_idx >= 0) {
+                    is->audioq.packetFlush();
+                    is->flush_actx = true;
+                }
+                if (is->video_stream_idx >= 0) {
+                    is->videoq.packetFlush();
+                    is->flush_vctx = true;
+                }
+            }
+
+            // reset to zero when seeking done
+            is->seek_req = 0;
         }
 
         // 检查队列pkt的数量

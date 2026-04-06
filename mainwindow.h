@@ -88,6 +88,17 @@ struct FFmpegPlayerCtx {
     double          frame_last_pts = 0.0;
     double          frame_last_delay = 0.0;
     double          video_clock = 0.0;
+
+    /*前进后退*/
+    // seek flags and pos for seek
+    std::atomic<int> seek_req;
+    int              seek_flags;
+    int64_t          seek_pos;
+
+    // flush flag for seek
+    std::atomic<bool> flush_actx = false;
+    std::atomic<bool> flush_vctx = false;
+
 };
 
 inline double get_audio_clock(FFmpegPlayerCtx *is)
@@ -119,6 +130,8 @@ public:
     ~MainWindow();
 
     int initPlayer();
+
+    void seekRelative(double offsetSec);
 protected:
     void dragEnterEvent(QDragEnterEvent *event);
     void dropEvent(QDropEvent *event);
@@ -126,6 +139,10 @@ private slots:
     void on_btnPlay_clicked();
 
     void on_btnPause_clicked();
+
+    void on_btnRewind_clicked();
+
+    void on_btnForward_clicked();
 
 private:
     Ui::MainWindow *ui;

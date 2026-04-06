@@ -103,6 +103,13 @@ void VideoDecodeThread::run()
         }
 
         //flush_vctx
+        if (is->flush_vctx) {
+            // ff_log_line("avcodec_flush_buffers(vCodecCtx) for seeking");
+            qDebug()<< "avcodec_flush_buffers(vCodecCtx) for seeking";
+            avcodec_flush_buffers(is->vCodecCtx);
+            is->flush_vctx = false;
+            continue;
+        }
 
         /*开始解码*/
         av_packet_unref(packet);

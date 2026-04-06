@@ -21,6 +21,15 @@
 //     return pts;
 // }
 
+void stream_seek(FFmpegPlayerCtx *is, int64_t pos, int rel)
+{
+    if (!is->seek_req) {
+        is->seek_pos = pos;
+        is->seek_flags = rel < 0 ? AVSEEK_FLAG_BACKWARD : 0;
+        is->seek_req = 1;
+    }
+}
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -119,6 +128,28 @@ int MainWindow::initPlayer()
     });
 
     return 0;
+}
+
+void MainWindow::seekRelative(double offsetSec)
+{
+    //参考自：ffmpeg-simple-player的void FFmpegPlayer::onKeyEvent(SDL_Event *e)
+    double incr, pos;
+
+    incr = offsetSec;
+
+    if (true) {
+        pos = get_audio_clock(playerCtx);
+        pos += incr;
+        if (pos < 0) {
+            pos = 0;
+        }
+        // ff_log_line("seek to %lf v:%lf a:%lf", pos, get_audio_clock(&playerCtx), get_audio_clock(&playerCtx));
+        qDebug() <<"seek to "<<pos
+                 <<" v:"<<get_audio_clock(playerCtx)
+                 <<" a:"<<get_audio_clock(playerCtx);
+        stream_seek(playerCtx, (int64_t)(pos * AV_TIME_BASE), (int)incr);
+    }
+
 }
 
 void MainWindow::dragEnterEvent(QDragEnterEvent *event)
@@ -253,5 +284,27 @@ void MainWindow::on_btnPause_clicked()
 
         playerCtx->pause = UNPAUSE;
     }
+}
+
+
+void MainWindow::on_btnRewind_clicked()
+{
+    if(!playerCtx){
+        qDebug()<<"容器为空。。。";
+        return;
+    }
+
+    seekRelative(-10.0);
+}
+
+
+void MainWindow::on_btnForward_clicked()
+{
+    if(!playerCtx){
+        qDebug()<<"容器为空。。。";
+        return;
+    }
+
+    seekRelative(10.0);
 }
 
