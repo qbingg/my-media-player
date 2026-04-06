@@ -38,24 +38,29 @@ MainWindow::~MainWindow()
 int MainWindow::initPlayer()
 {
     /* 清理旧的线程和上下文 */
+    qDebug()<<"清理旧的线程和上下文。。。。。。";
+    if(m_videoDecodeThread){
+        // m_videoDecodeThread->requestInterruption();
+        m_videoDecodeThread->stopThread();
+        m_videoDecodeThread->wait();
+        delete m_videoDecodeThread;
+        m_videoDecodeThread = nullptr;
+    }
+    qDebug()<<"已关闭视频线程";
     if(m_audioDecodeThread){
         m_audioDecodeThread->requestInterruption();
         m_audioDecodeThread->wait();
         delete m_audioDecodeThread;
         m_audioDecodeThread = nullptr;
     }
-    if(m_videoDecodeThread){
-        m_videoDecodeThread->requestInterruption();
-        m_videoDecodeThread->wait();
-        delete m_videoDecodeThread;
-        m_videoDecodeThread = nullptr;
-    }
+    qDebug()<<"已关闭音频线程";
     if(m_demuxThread){
         m_demuxThread->requestInterruption();
         m_demuxThread->wait();
         delete m_demuxThread;
         m_demuxThread = nullptr;
     }
+    qDebug()<<"已关闭解封装线程";
     if(m_checkCurrentSecTimer){
         m_checkCurrentSecTimer->stop();
         delete m_checkCurrentSecTimer;

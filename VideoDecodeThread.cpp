@@ -65,6 +65,11 @@ void VideoDecodeThread::setPlayerCtx(FFmpegPlayerCtx *ctx)
     is = ctx;
 }
 
+void VideoDecodeThread::stopThread()
+{
+    m_stop = 1;
+}
+
 void VideoDecodeThread::run()
 {
     // while(!isInterruptionRequested())
@@ -86,7 +91,7 @@ void VideoDecodeThread::run()
 
     while (true) {
         //m_stop
-        if(isInterruptionRequested()){
+        if(m_stop){
             qDebug()<<"request quit while decode_loop";
             break;
         }
@@ -98,7 +103,6 @@ void VideoDecodeThread::run()
         /*开始解码*/
         av_packet_unref(packet);
         //这是让m_stop=0；
-        std::atomic<bool> m_stop=0;
         if (is->videoq.packetGet(packet, m_stop) < 0) {
             break;
         }
@@ -182,5 +186,9 @@ void VideoDecodeThread::run()
 
     }
 
-
+    // 释放线程内alloc的资源
+    av_packet_free(&packet);
+    av_frame_free(&pFrame);
+    av_freep(&pFrameRGB->data[0]);//必须手动释放 av_image_alloc 分配的缓冲区！
+    av_frame_free(&pFrameRGB);
 }

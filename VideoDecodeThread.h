@@ -14,10 +14,14 @@ public:
     ~VideoDecodeThread();
 
     void setPlayerCtx(FFmpegPlayerCtx *ctx);
+
+    void stopThread();
 signals:
     void sendCurrentFrame(QImage);
 private:
     FFmpegPlayerCtx *is = nullptr;
+
+    std::atomic<bool> m_stop = 0;
 protected:
     void run()override;
 };
