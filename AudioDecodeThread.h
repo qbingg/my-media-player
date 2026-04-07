@@ -19,6 +19,10 @@ public:
     int audio_decode_frame(FFmpegPlayerCtx *is, double *pts_ptr);
 
     void stopThread();
+
+    void setVolume(float newVolume);//音量：0.0~1.0
+    float volume() const;//音量：0.0~1.0
+
 signals:
     void sendMessage();
 
@@ -26,6 +30,8 @@ private:
     FFmpegPlayerCtx *is = nullptr;
     std::atomic<bool> m_stop = false; // 线程停止标志（类成员！）
     SDL_AudioDeviceID m_audio_dev = 0; // SDL音频设备ID
+
+    float m_volume = 1.0f;
 protected:
     void run()override;
 };

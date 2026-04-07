@@ -144,6 +144,8 @@ private slots:
 
     void on_btnForward_clicked();
 
+    void on_volumeSlider_valueChanged(int value);
+
 private:
     Ui::MainWindow *ui;
 

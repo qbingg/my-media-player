@@ -207,6 +207,7 @@ void MainWindow::on_btnPlay_clicked()
     m_audioDecodeThread->start();
     m_videoDecodeThread->start();
     m_checkCurrentSecTimer->start(1000);
+    ui->volumeSlider->setValue(50);//每个视频播放默认50音量->0.5f ，如果不是这样的话，需要考虑每次初始化容器时，setVolume一次让音频解码线程m_volume与ui的Slider一致才行。
 
 
     // // init ctx
@@ -316,5 +317,17 @@ void MainWindow::on_btnForward_clicked()
     }
 
     seekRelative(10.0);
+}
+
+
+void MainWindow::on_volumeSlider_valueChanged(int value)
+{
+    if((!playerCtx)&&(!m_audioDecodeThread)){
+        qDebug()<<"容器为空。。。";
+        return;
+    }
+
+    float f = value / static_cast<double>(100);// 0~100 -> 0.0f~1.0f
+    m_audioDecodeThread->setVolume(f);
 }
 

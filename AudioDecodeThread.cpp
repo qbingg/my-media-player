@@ -17,6 +17,10 @@ void AudioDecodeThread::setPlayerCtx(FFmpegPlayerCtx *ctx)
 
 void AudioDecodeThread::getAudioData(unsigned char *stream, int len)
 {
+    // 【修复1：备份 原始指针 + 原始长度！！！】
+    unsigned char *orig_stream = stream;  // 备份SDL缓冲区起始地址
+    int orig_len = len;                   // 备份总长度
+
     // decoder is not ready or in pause state, output silence
     if (!is->aCodecCtx || is->pause == PAUSE) {
         memset(stream, 0, len);
@@ -47,6 +51,17 @@ void AudioDecodeThread::getAudioData(unsigned char *stream, int len)
         stream += len1;
         is->audio_buf_index += len1;
     }
+
+    // ====================== 【修复后：音量缩放】 ======================
+    // 使用备份的 原始长度 和 原始指针！
+    int sampleCount = orig_len / sizeof(int16_t);
+    int16_t *samples = (int16_t *)orig_stream;
+
+    // 音量缩放
+    for (int i = 0; i < sampleCount; i++) {
+        samples[i] = (int16_t)(samples[i] * m_volume);
+    }
+    // ===================================================================
 }
 
 int AudioDecodeThread::audio_decode_frame(FFmpegPlayerCtx *is, double *pts_ptr)
@@ -148,6 +163,16 @@ int AudioDecodeThread::audio_decode_frame(FFmpegPlayerCtx *is, double *pts_ptr)
 void AudioDecodeThread::stopThread()
 {
     m_stop = 1;
+}
+
+void AudioDecodeThread::setVolume(float newVolume)
+{
+    m_volume = qBound(0.0f, newVolume, 1.0f);;
+}
+
+float AudioDecodeThread::volume() const
+{
+    return m_volume;
 }
 
 // ====================== 核心：SDL音频回调（不变） ======================
