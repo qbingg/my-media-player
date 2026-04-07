@@ -135,7 +135,7 @@ int MainWindow::initPlayer()
         ui->currentSecLabel->setText(str);
 
         //如果用户正在拖拽Slider，暂时不更新
-        if(m_userIsUsingSlider){
+        if(ui->horizontalSlider->isSliderDown()){
             qDebug()<<"用户正在拖拽Slider，暂时不更新";
         }else{
             //这一步是为了更新进度条时，防被动触发on_horizontalSlider_valueChanged
@@ -364,13 +364,13 @@ void MainWindow::on_volumeSlider_valueChanged(int value)
 }
 
 
-void MainWindow::on_horizontalSlider_sliderPressed()
-{
-    //按下Slider拖拽时，只会触发一次
-    qDebug()<<"on_horizontalSlider_sliderPressed()";
-
-    m_userIsUsingSlider = true;
-}
+// void MainWindow::on_horizontalSlider_sliderPressed()
+// {
+//     //按下Slider拖拽时，只会触发一次
+//     qDebug()<<"on_horizontalSlider_sliderPressed()";
+//
+//     m_userIsUsingSlider = true;
+// }
 
 
 void MainWindow::on_horizontalSlider_sliderReleased()
@@ -378,9 +378,14 @@ void MainWindow::on_horizontalSlider_sliderReleased()
     //松开Slider拖拽时，只会触发一次
     qDebug()<<"on_horizontalSlider_sliderReleased()"<<"值："<<ui->horizontalSlider->value();
 
+    if((!playerCtx)&&(!m_audioDecodeThread)){
+        qDebug()<<"容器为空。。。";
+        return;
+    }
+
     //通过seekAbsolute进度条跳转至 n 秒 最近的 I 帧
     seekAbsolute(ui->horizontalSlider->value());
 
-    m_userIsUsingSlider = false;
+    // m_userIsUsingSlider = false;
 }
 

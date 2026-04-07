@@ -148,7 +148,7 @@ private slots:
 
     void on_volumeSlider_valueChanged(int value);
 
-    void on_horizontalSlider_sliderPressed();
+    // void on_horizontalSlider_sliderPressed();
 
     void on_horizontalSlider_sliderReleased();
 
@@ -164,6 +164,6 @@ private:
     VideoDecodeThread *m_videoDecodeThread = nullptr;
     QTimer *m_checkCurrentSecTimer = nullptr;
 
-    bool m_userIsUsingSlider = false;
+
 };
 #endif // MAINWINDOW_H
