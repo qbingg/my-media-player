@@ -239,8 +239,10 @@ void MainWindow::on_btnPlay_clicked()
     m_audioDecodeThread->start();
     m_videoDecodeThread->start();
     m_checkCurrentSecTimer->start(1000);
-    ui->volumeSlider->setValue(50);//每个视频播放默认50音量->0.5f ，如果不是这样的话，需要考虑每次初始化容器时，setVolume一次让音频解码线程m_volume与ui的Slider一致才行。
-
+    // ！！！注意setValue(50);时valueChanged槽只在值变化时触发，所以第二次及以后播放视频，会因为不处发槽函数而导致音量承认为1.0f
+    // ui->volumeSlider->setValue(50);//每个视频播放默认50音量->0.5f ，如果不是这样的话，需要考虑每次初始化容器时，setVolume一次让音频解码线程m_volume与ui的Slider一致才行。
+    // 直接手动调用：播放视频时获取一次Slider的值/100
+    m_audioDecodeThread->setVolume(ui->volumeSlider->value() / static_cast<double>(100));
 
     // // init ctx
     // playerCtx.audio_frame = av_frame_alloc();
