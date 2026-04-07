@@ -173,7 +173,9 @@ void MyDemuxThread::run()
         // 从ctx中获取pkt
         if (av_read_frame(is->formatCtx, packet) < 0) {
             qDebug()<< "av_read_frame error";
-            break;
+            // break;
+            msleep(10);
+            continue;
         }
 
         if (packet->stream_index == is->video_stream_idx) {
