@@ -36,6 +36,7 @@ extern "C"{
 #include "AudioDecodeThread.h"
 #include <QTimer>
 #include "VideoDecodeThread.h"
+#include <QSignalBlocker>
 QT_BEGIN_NAMESPACE
 namespace Ui {
 class MainWindow;
@@ -132,6 +133,7 @@ public:
     int initPlayer();
 
     void seekRelative(double offsetSec);
+    void seekAbsolute(double offsetSec);
 protected:
     void dragEnterEvent(QDragEnterEvent *event);
     void dropEvent(QDropEvent *event);
@@ -146,6 +148,10 @@ private slots:
 
     void on_volumeSlider_valueChanged(int value);
 
+    void on_horizontalSlider_sliderPressed();
+
+    void on_horizontalSlider_sliderReleased();
+
 private:
     Ui::MainWindow *ui;
 
@@ -157,5 +163,7 @@ private:
     AudioDecodeThread *m_audioDecodeThread = nullptr;
     VideoDecodeThread *m_videoDecodeThread = nullptr;
     QTimer *m_checkCurrentSecTimer = nullptr;
+
+    bool m_userIsUsingSlider = false;
 };
 #endif // MAINWINDOW_H

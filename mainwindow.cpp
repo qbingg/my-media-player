@@ -133,7 +133,17 @@ int MainWindow::initPlayer()
         double audio_clock = get_audio_clock(playerCtx);
         QString str = QString::number(audio_clock,'d',8);
         ui->currentSecLabel->setText(str);
-        ui->horizontalSlider->setValue(audio_clock);
+
+        //如果用户正在拖拽Slider，暂时不更新
+        if(m_userIsUsingSlider){
+            qDebug()<<"用户正在拖拽Slider，暂时不更新";
+        }else{
+            //这一步是为了更新进度条时，防被动触发on_horizontalSlider_valueChanged
+            const QSignalBlocker blocker(ui->horizontalSlider);
+
+            ui->horizontalSlider->setValue(audio_clock);
+        }
+
         qDebug()<<audio_clock<<str;
     });
 
@@ -149,6 +159,28 @@ void MainWindow::seekRelative(double offsetSec)
 
     if (true) {
         pos = get_audio_clock(playerCtx);
+        pos += incr;
+        if (pos < 0) {
+            pos = 0;
+        }
+        // ff_log_line("seek to %lf v:%lf a:%lf", pos, get_audio_clock(&playerCtx), get_audio_clock(&playerCtx));
+        qDebug() <<"seek to "<<pos
+                 <<" v:"<<get_audio_clock(playerCtx)
+                 <<" a:"<<get_audio_clock(playerCtx);
+        stream_seek(playerCtx, (int64_t)(pos * AV_TIME_BASE), (int)incr);
+    }
+
+}
+
+void MainWindow::seekAbsolute(double offsetSec)
+{
+    //参考自：ffmpeg-simple-player的void FFmpegPlayer::onKeyEvent(SDL_Event *e)
+    double incr, pos;
+
+    incr = offsetSec;
+
+    if (true) {
+        pos = 0;//get_audio_clock(playerCtx);
         pos += incr;
         if (pos < 0) {
             pos = 0;
@@ -329,5 +361,26 @@ void MainWindow::on_volumeSlider_valueChanged(int value)
 
     float f = value / static_cast<double>(100);// 0~100 -> 0.0f~1.0f
     m_audioDecodeThread->setVolume(f);
+}
+
+
+void MainWindow::on_horizontalSlider_sliderPressed()
+{
+    //按下Slider拖拽时，只会触发一次
+    qDebug()<<"on_horizontalSlider_sliderPressed()";
+
+    m_userIsUsingSlider = true;
+}
+
+
+void MainWindow::on_horizontalSlider_sliderReleased()
+{
+    //松开Slider拖拽时，只会触发一次
+    qDebug()<<"on_horizontalSlider_sliderReleased()"<<"值："<<ui->horizontalSlider->value();
+
+    //通过seekAbsolute进度条跳转至 n 秒 最近的 I 帧
+    seekAbsolute(ui->horizontalSlider->value());
+
+    m_userIsUsingSlider = false;
 }
 
