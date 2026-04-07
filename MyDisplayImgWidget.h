@@ -48,7 +48,13 @@ protected:
         QPainter painter(this);
 
         //画边框，表示Widget范围
-        painter.setPen(QPen(Qt::black,5));
+        // painter.setPen(QPen(Qt::black,5));
+        // painter.drawRect(rect());
+        // 1. 设置填充色为 #BABABA（核心修改）
+        painter.setBrush(QColor("#CFCFCF"));
+        // 2. 取消边框绘制（不需要边框就设为无画笔）
+        painter.setPen(Qt::NoPen);
+        // 绘制纯色填充矩形，覆盖整个Widget区域
         painter.drawRect(rect());
 
         //缩放并显示图片
