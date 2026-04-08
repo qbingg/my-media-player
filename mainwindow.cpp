@@ -172,26 +172,33 @@ void MainWindow::seekRelative(double offsetSec)
 
 }
 
-void MainWindow::seekAbsolute(double offsetSec)
+void MainWindow::seekAbsolute(double targetSec)
 {
-    //参考自：ffmpeg-simple-player的void FFmpegPlayer::onKeyEvent(SDL_Event *e)
-    double incr, pos;
+    // //参考自：ffmpeg-simple-player的void FFmpegPlayer::onKeyEvent(SDL_Event *e)
+    // double incr, pos;
+    // incr = targetSec;
+    // if (true) {
+    //     pos = 0;//get_audio_clock(playerCtx);
+    //     pos += incr;
+    //     if (pos < 0) {
+    //         pos = 0;
+    //     }
+    //     // ff_log_line("seek to %lf v:%lf a:%lf", pos, get_audio_clock(&playerCtx), get_audio_clock(&playerCtx));
+    //     qDebug() <<"旧seekAbsolute的值seek to "<<pos
+    //              <<" v:"<<get_audio_clock(playerCtx)
+    //              <<" a:"<<get_audio_clock(playerCtx);
+    //     // stream_seek(playerCtx, (int64_t)(pos * AV_TIME_BASE), (int)incr);
+    // }
 
-    incr = offsetSec;
-
-    if (true) {
-        pos = 0;//get_audio_clock(playerCtx);
-        pos += incr;
-        if (pos < 0) {
-            pos = 0;
-        }
-        // ff_log_line("seek to %lf v:%lf a:%lf", pos, get_audio_clock(&playerCtx), get_audio_clock(&playerCtx));
-        qDebug() <<"seek to "<<pos
-                 <<" v:"<<get_audio_clock(playerCtx)
-                 <<" a:"<<get_audio_clock(playerCtx);
-        stream_seek(playerCtx, (int64_t)(pos * AV_TIME_BASE), (int)incr);
-    }
-
+    //获取容器总的视频时长
+    int64_t totalMicroSec =playerCtx->formatCtx->duration;//AVFormatContext: int64_t duration: 	Duration of the stream, in AV_TIME_BASE fractional seconds.
+    int64_t totalSec = (totalMicroSec / AV_TIME_BASE);
+    //边界值保护 0 <= targetSec <= totalSec
+    double pos2 = qBound(0.0, targetSec, static_cast<double>(totalSec));
+    qDebug() <<"新seekAbsolute的值seek to "<<pos2
+             <<" v:"<<get_audio_clock(playerCtx)
+             <<" a:"<<get_audio_clock(playerCtx);
+    stream_seek(playerCtx, (int64_t)(pos2 * AV_TIME_BASE), -1);//-1是为了触发：is->seek_flags = AVSEEK_FLAG_BACKWARD;
 }
 
 void MainWindow::dragEnterEvent(QDragEnterEvent *event)

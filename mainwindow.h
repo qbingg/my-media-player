@@ -133,7 +133,7 @@ public:
     int initPlayer();
 
     void seekRelative(double offsetSec);
-    void seekAbsolute(double offsetSec);
+    void seekAbsolute(double targetSec);
 protected:
     void dragEnterEvent(QDragEnterEvent *event);
     void dropEvent(QDropEvent *event);
